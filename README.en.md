@@ -29,13 +29,13 @@ English | [简体中文](./README.md)
 ### As a CLI Tool (Global)
 
 ```bash
-npm install -g tiny-png
+npm install -g tinypng-enhanced
 ```
 
 ### As a Library
 
 ```bash
-npm install tiny-png
+npm install tinypng-enhanced
 ```
 
 ## Quick Start
@@ -105,7 +105,7 @@ Output: <input-dir>/output/
 ### Library Usage
 
 ```javascript
-import { TinyPNGCompressor } from 'tiny-png'
+import { TinyPNGCompressor } from 'tinypng-enhanced'
 import { readFileSync, writeFileSync } from 'fs'
 
 // Initialize with API key(s)
@@ -281,7 +281,7 @@ API keys are stored in `~/.tinypngrc`:
 ### Constructor
 
 ```typescript
-import { TinyPNGCompressor } from 'tiny-png'
+import { TinyPNGCompressor } from 'tinypng-enhanced'
 
 const compressor = new TinyPNGCompressor(options)
 ```
@@ -489,7 +489,7 @@ API keys are resolved in the following order:
 ### Compress All Images in Directory
 
 ```javascript
-import { TinyPNGCompressor } from 'tiny-png'
+import { TinyPNGCompressor } from 'tinypng-enhanced'
 import { readdir, readFile, writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
 
@@ -517,7 +517,7 @@ console.log(`Total quota used: ${summary.totalUsed}/${summary.totalLimit}`)
 ### Batch Convert to WebP
 
 ```javascript
-import { TinyPNGCompressor } from 'tiny-png'
+import { TinyPNGCompressor } from 'tinypng-enhanced'
 import { readdir } from 'fs/promises'
 import { basename, extname } from 'path'
 

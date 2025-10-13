@@ -29,13 +29,13 @@
 ### 作为 CLI 工具（全局）
 
 ```bash
-npm install -g tiny-png
+npm install -g tinypng-enhanced
 ```
 
 ### 作为库
 
 ```bash
-npm install tiny-png
+npm install tinypng-enhanced
 ```
 
 ## 快速开始
@@ -105,7 +105,7 @@ tinypng cv images/*.jpg -f avif
 ### 库使用
 
 ```javascript
-import { TinyPNGCompressor } from 'tiny-png'
+import { TinyPNGCompressor } from 'tinypng-enhanced'
 import { readFileSync, writeFileSync } from 'fs'
 
 // 使用 API 密钥初始化
@@ -281,7 +281,7 @@ API 密钥存储在 `~/.tinypngrc`：
 ### 构造函数
 
 ```typescript
-import { TinyPNGCompressor } from 'tiny-png'
+import { TinyPNGCompressor } from 'tinypng-enhanced'
 
 const compressor = new TinyPNGCompressor(options)
 ```
@@ -489,7 +489,7 @@ API 密钥按以下顺序解析：
 ### 压缩目录中的所有图片
 
 ```javascript
-import { TinyPNGCompressor } from 'tiny-png'
+import { TinyPNGCompressor } from 'tinypng-enhanced'
 import { readdir, readFile, writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
 
@@ -517,7 +517,7 @@ console.log(`总配额已用: ${summary.totalUsed}/${summary.totalLimit}`)
 ### 批量转换为 WebP
 
 ```javascript
-import { TinyPNGCompressor } from 'tiny-png'
+import { TinyPNGCompressor } from 'tinypng-enhanced'
 import { readdir } from 'fs/promises'
 import { basename, extname } from 'path'
 
