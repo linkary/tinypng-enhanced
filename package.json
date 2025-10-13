@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "TinyPNG Compressor with multiple API keys support",
   "main": "src/tinypng.mjs",
+  "bin": {
+    "tinypng": "./bin/tinypng.mjs"
+  },
   "exports": {
     ".": "./src/tinypng.mjs",
     "./service": "./src/service.mjs"
@@ -29,5 +32,11 @@
   "devDependencies": {
     "@vitest/coverage-v8": "^3.2.4",
     "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "chalk": "^5.6.2",
+    "commander": "^14.0.1",
+    "glob": "^11.0.3",
+    "ora": "^9.0.0"
   }
 }
