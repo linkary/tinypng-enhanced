@@ -1,0 +1,33 @@
+{
+  "name": "tiny-png",
+  "version": "1.0.0",
+  "description": "TinyPNG Compressor with multiple API keys support",
+  "main": "src/tinypng.mjs",
+  "exports": {
+    ".": "./src/tinypng.mjs",
+    "./service": "./src/service.mjs"
+  },
+  "scripts": {
+    "env": "export TINYPNG_API_KEY=$TINYPNG_API_KEY && export TINYPNG_EXTRA_API_KEY=$TINYPNG_EXTRA_API_KEY",
+    "test": "vitest run",
+    "test:watch": "npm run env && vitest",
+    "test:coverage": "npm run env && vitest run --coverage",
+    "test:ui": "npm run env && vitest --ui",
+    "test:unit": "npm run env && vitest run -t 'Unit Tests'",
+    "test:integration": "npm run env && vitest run -t 'Integration Tests'",
+    "prepublishOnly": "npm run test:unit"
+  },
+  "keywords": [
+    "tinypng",
+    "compressor",
+    "image",
+    "compression",
+    "multiple-api-keys"
+  ],
+  "license": "MIT",
+  "type": "module",
+  "devDependencies": {
+    "@vitest/coverage-v8": "^3.2.4",
+    "vitest": "^3.2.4"
+  }
+}
