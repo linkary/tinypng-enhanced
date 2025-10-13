@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander'
-import { glob } from 'glob'
-import { readFileSync, writeFileSync, existsSync, mkdirSync, statSync } from 'node:fs'
+import { readFileSync, writeFileSync, existsSync, mkdirSync, statSync, readdirSync } from 'node:fs'
 import { join, basename, extname, dirname, resolve } from 'node:path'
 import { homedir } from 'node:os'
 import readline from 'node:readline'
@@ -123,25 +122,40 @@ async function getApiKey(options) {
 }
 
 /**
+ * Recursively scan directory for image files
+ */
+function scanDirectory(dir) {
+  const files = []
+  const entries = readdirSync(dir, { withFileTypes: true })
+
+  for (const entry of entries) {
+    const fullPath = join(dir, entry.name)
+    if (entry.isDirectory()) {
+      files.push(...scanDirectory(fullPath))
+    } else if (entry.isFile() && SUPPORTED_EXTENSIONS.includes(extname(entry.name).toLowerCase())) {
+      files.push(fullPath)
+    }
+  }
+
+  return files
+}
+
+/**
  * Expand file patterns to list of files
  */
-async function expandFiles(patterns) {
+function expandFiles(patterns) {
   const files = new Set()
 
   for (const pattern of patterns) {
     // Check if it's a directory
     if (existsSync(pattern) && statSync(pattern).isDirectory()) {
-      // Scan directory for images
-      const dirFiles = await glob(join(pattern, '**', '*'), { nodir: true })
-      dirFiles
-        .filter(f => SUPPORTED_EXTENSIONS.includes(extname(f).toLowerCase()))
-        .forEach(f => files.add(resolve(f)))
-    } else {
-      // Treat as glob pattern
-      const matchedFiles = await glob(pattern, { nodir: true })
-      matchedFiles
-        .filter(f => SUPPORTED_EXTENSIONS.includes(extname(f).toLowerCase()))
-        .forEach(f => files.add(resolve(f)))
+      // Scan directory recursively for images
+      scanDirectory(pattern).forEach(f => files.add(resolve(f)))
+    } else if (existsSync(pattern)) {
+      // Single file
+      if (SUPPORTED_EXTENSIONS.includes(extname(pattern).toLowerCase())) {
+        files.add(resolve(pattern))
+      }
     }
   }
 
@@ -196,7 +210,7 @@ async function compressCommand(files, options) {
   const compressor = new TinyPNGCompressor({ apiKey: apiKeys })
 
   // Expand file patterns
-  const filesToProcess = await expandFiles(files)
+  const filesToProcess = expandFiles(files)
 
   if (filesToProcess.length === 0) {
     console.log(chalk.yellow('⚠️  No files found'))
@@ -364,7 +378,7 @@ async function convertCommand(files, options) {
   const compressor = new TinyPNGCompressor({ apiKey: apiKeys })
 
   // Expand file patterns
-  const filesToProcess = await expandFiles(files)
+  const filesToProcess = expandFiles(files)
 
   if (filesToProcess.length === 0) {
     console.log(chalk.yellow('⚠️  No files found'))
