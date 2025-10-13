@@ -1,347 +1,274 @@
-# TinyPNG Compressor
+# TinyPNG 压缩器
 
-A powerful Node.js library and CLI tool for image compression and format conversion using the [TinyPNG API](https://tinypng.com/).
+支持多个 API 密钥的[TinyPNG](https://tinypng.com/) CLI及模块工具。
 
-[![Tests](https://img.shields.io/badge/tests-passing-brightgreen)]()
-[![License](https://img.shields.io/badge/license-MIT-blue)]()
+[![测试](https://img.shields.io/badge/tests-passing-brightgreen)]()
+[![许可证](https://img.shields.io/badge/license-MIT-blue)]()
 [![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen)]()
 
-English | [简体中文](./README.zh-CN.md)
+[English](./README.en.md) | 简体中文
 
-## Features
+## 特性
 
-✨ **Comprehensive Image Processing**
+ **高级 API 密钥管理**
 
-- 🗜️ Image compression (PNG, JPEG, WebP, AVIF)
-- 🔄 Format conversion (PNG ↔ JPEG ↔ WebP ↔ AVIF)
-- 📐 Intelligent resizing (scale, fit, cover, thumb)
-- 🎯 Batch processing with progress tracking
+- 支持多个 API 密钥并自动轮换
+- 最少使用策略，实现最佳负载均衡
+- 从 API 响应实时追踪配额
+- 接近限制时智能警告
 
-🔑 **Advanced API Key Management**
+**全面的图片处理**
 
-- Multiple API key support with automatic rotation
-- Least-used strategy for optimal load balancing
-- Real-time quota tracking from API responses
-- Smart warnings when approaching limits
+- 🗜️ 图片压缩（PNG、JPEG、WebP、AVIF）
+- 🔄 格式转换（PNG ↔ JPEG ↔ WebP ↔ AVIF）
+- 📐 智能调整大小（scale、fit、cover、thumb）
+- 🎯 批量处理与进度追踪
 
-💻 **Flexible Usage**
+## 安装
 
-- **Node.js Library**: Full programmatic API with event emitters
-- **CLI Tool**: User-friendly command-line interface
-- **Stream Support**: Efficient memory usage with streams
-- **TypeScript**: Full type definitions included
-
-🎨 **Developer Experience**
-
-- Beautiful CLI output with colors and spinners
-- Comprehensive error handling and reporting
-- Progress tracking for batch operations
-- Extensive test coverage with Vitest
-
-## Table of Contents
-
-- [Installation](#installation)
-- [Quick Start](#quick-start)
-  - [CLI Usage](#cli-usage)
-  - [Library Usage](#library-usage)
-- [CLI Documentation](#cli-documentation)
-- [Library API](#library-api)
-- [Configuration](#configuration)
-- [Examples](#examples)
-- [Testing](#testing)
-- [Contributing](#contributing)
-- [License](#license)
-
-## Installation
-
-### As a CLI Tool (Global)
+### 作为 CLI 工具（全局）
 
 ```bash
 npm install -g tiny-png
 ```
 
-Or install locally and use `npm link`:
-
-```bash
-git clone <repository-url>
-cd tiny-png
-npm install
-npm link
-```
-
-### As a Library
+### 作为库
 
 ```bash
 npm install tiny-png
 ```
 
-## Quick Start
+## 快速开始
 
-### CLI Usage
+### CLI 使用
 
-**First-time setup:**
+**首次设置：**
 
 ```bash
-# Configure your API key(s)
+# 配置你的 API 密钥
 tinypng config
-
-# Or set via environment variable
-export TINYPNG_API_KEY="your-api-key"
 ```
 
-**Compress images:**
+**压缩图片：**
 
 ```bash
-# Single file
+# 单个文件
 tinypng compress image.png
 
-# Multiple files
+# 多个文件
 tinypng c *.png *.jpg
 
-# Entire directory
+# 整个目录
 tinypng c ./photos/
 
-# With resize
+# 带调整大小
 tinypng c banner.jpg -r -m fit --width 1920 --height 1080
 ```
 
-**Convert formats:**
+**转换格式：**
 
 ```bash
-# Convert to WebP
+# 转换为 WebP
 tinypng convert *.png -f webp
 
-# Convert to AVIF (best compression)
+# 转换为 AVIF（最佳压缩）
 tinypng cv images/*.jpg -f avif
 ```
 
-**Output:**
+**输出：**
 
 ```
-🗜️  TinyPNG Compress
+🗜️  TinyPNG 压缩
 
-Found 3 file(s) to compress
+找到 3 个文件待压缩
 
 ✓ image1.png → 512 KB → 128 KB (-75.00%)
 ✓ image2.jpg → 1.2 MB → 450 KB (-62.50%)
 ✓ image3.png → 256 KB → 89 KB (-65.23%)
 
-📊 Summary
+📊 汇总
 ──────────────────────────────────────────────────
-✓ Success: 3
-Total saved: 1.02 MB (70.15%)
+✓ 成功: 3
+总节省: 1.02 MB (70.15%)
 
-📊 Quota Status
-   Total: 497 remaining (3 used, 500 limit) · 0.6% used
-   Keys: Key 1 (497)
+📊 配额状态
+   总计: 497 剩余 (3 已用, 500 限制) · 0.6% 已用
+   密钥: 密钥 1 (497)
 
-Output: ./output/
+输出: ./output/
 ```
 
-### Library Usage
+**示例:**
+
+![](https://img.alicdn.com/imgextra/i2/O1CN01QMBEJM20fGRdf8bEg_!!6000000006876-1-tps-724-421.gif)
+
+### 库使用
 
 ```javascript
 import { TinyPNGCompressor } from 'tiny-png'
 import { readFileSync, writeFileSync } from 'fs'
 
-// Initialize with API key(s)
+// 使用 API 密钥初始化
 const compressor = new TinyPNGCompressor({
-  apiKey: ['key1', 'key2', 'key3'], // Multiple keys for unlimited compression
+  apiKey: ['key1', 'key2', 'key3'], // 多个密钥实现无限压缩
 })
 
-// Compress image
+// 压缩图片
 const inputBuffer = readFileSync('input.png')
 const result = await compressor.compress(inputBuffer)
 
-// Save compressed image
+// 保存压缩后的图片
 writeFileSync('output.png', result.output)
 
-console.log(`Saved ${result.savedBytes} bytes (${result.savedPercent}%)`)
+console.log(`节省 ${result.savedBytes} 字节 (${result.savedPercent}%)`)
 
-// Get quota information
+// 获取配额信息
 const summary = compressor.getSummary()
-console.log(`Quota used: ${summary.totalUsed}/${summary.totalLimit}`)
+console.log(`配额已用: ${summary.totalUsed}/${summary.totalLimit}`)
 ```
 
-## CLI Documentation
+## CLI 文档
 
-### Commands
+### 命令
 
-#### `tinypng compress` (alias: `c`)
+#### `tinypng compress`（别名：`c`）
 
-Compress images with optional resizing.
+压缩图片，可选调整大小。
 
 ```bash
-tinypng compress <files...> [options]
+tinypng compress <files...> [选项]
 
-Options:
-  -k, --key <keys...>     API key(s) - separate multiple keys with spaces or commas
-  -o, --output <path>     Output directory or file (default: ./output/)
-  -w, --overwrite         Overwrite original files
-  -r, --resize            Enable resize
-  -m, --method <method>   Resize method (scale, fit, cover, thumb)
-  --width <width>         Target width
-  --height <height>       Target height
+选项:
+  -k, --key <keys...>     API 密钥 - 多个密钥用空格或逗号分隔
+  -o, --output <path>     输出目录或文件（默认: ./output/）
+  -w, --overwrite         覆盖原始文件
+  -r, --resize            启用调整大小
+  -m, --method <method>   调整大小方法（scale、fit、cover、thumb）
+  --width <width>         目标宽度
+  --height <height>       目标高度
 ```
 
-**Resize Methods:**
+**调整大小方法：**
 
-| Method  | Description                                 | Required         |
-| ------- | ------------------------------------------- | ---------------- |
-| `scale` | Proportionally scales image                 | width OR height  |
-| `fit`   | Scales to fit within dimensions             | width AND height |
-| `cover` | Scales and crops to fill dimensions exactly | width AND height |
-| `thumb` | Intelligent cropping for thumbnails         | width AND height |
+| 方法    | 描述                       | 必需参数         |
+| ------- | -------------------------- | ---------------- |
+| `scale` | 按比例缩放图片             | width 或 height  |
+| `fit`   | 缩放以适应尺寸             | width 和 height  |
+| `cover` | 缩放和裁剪以完全填充尺寸   | width 和 height  |
+| `thumb` | 智能裁剪用于缩略图         | width 和 height  |
 
-**Examples:**
+**示例：**
 
 ```bash
-# Basic compression
+# 基础压缩
 tinypng c image.png
 
-# Multiple files with output directory
+# 多个文件并指定输出目录
 tinypng c *.png -o compressed/
 
-# Resize and compress
+# 调整大小并压缩
 tinypng c banner.jpg -r -m fit --width 1920 --height 1080
 
-# Overwrite originals (careful!)
+# 覆盖原始文件（小心！）
 tinypng c *.png -w
 
-# Multiple API keys
+# 多个 API 密钥
 tinypng c images/*.png -k key1 key2 key3
 ```
 
-#### `tinypng convert` (alias: `cv`)
+#### `tinypng convert`（别名：`cv`）
 
-Convert images to different formats.
+将图片转换为不同格式。
 
 ```bash
-tinypng convert <files...> [options]
+tinypng convert <files...> [选项]
 
-Options:
-  -k, --key <keys...>     API key(s)
-  -f, --format <format>   Target format (webp, png, jpeg, avif) [REQUIRED]
-  -o, --output <path>     Output directory or file (default: ./output/)
-  -w, --overwrite         Overwrite original files
+选项:
+  -k, --key <keys...>     API 密钥
+  -f, --format <format>   目标格式（webp、png、jpeg、avif）【必需】
+  -o, --output <path>     输出目录或文件（默认: ./output/）
+  -w, --overwrite         覆盖原始文件
 ```
 
-**Supported Formats:**
+**支持的格式：**
 
-| Format | Extension | Transparency | Best For                          |
-| ------ | --------- | ------------ | --------------------------------- |
-| PNG    | `.png`    | ✅ Yes       | Screenshots, graphics             |
-| JPEG   | `.jpg`    | ❌ No        | Photos                            |
-| WebP   | `.webp`   | ✅ Yes       | Modern web, excellent compression |
-| AVIF   | `.avif`   | ✅ Yes       | Next-gen, smallest files          |
+| 格式   | 扩展名  | 透明度 | 最适合                   |
+| ------ | ------- | ------ | ------------------------ |
+| PNG    | `.png`  | ✅ 是  | 截图、图形               |
+| JPEG   | `.jpg`  | ❌ 否  | 照片                     |
+| WebP   | `.webp` | ✅ 是  | 现代网络，优秀的压缩     |
+| AVIF   | `.avif` | ✅ 是  | 下一代格式，最小文件     |
 
-**Examples:**
+**示例：**
 
 ```bash
-# Convert to WebP
+# 转换为 WebP
 tinypng cv *.png -f webp
 
-# Convert to AVIF with custom output
+# 转换为 AVIF 并自定义输出
 tinypng cv images/*.jpg -f avif -o converted/
 
-# Convert and overwrite
+# 转换并覆盖
 tinypng cv *.jpg -f webp -w
 ```
 
-#### `tinypng config` (alias: `cfg`)
+#### `tinypng config`（别名：`cfg`）
 
-Manage API key configuration.
+管理 API 密钥配置。
 
 ```bash
-tinypng config [options]
+tinypng config [选项]
 
-Options:
-  -s, --show    Show current configuration (keys masked)
-  -r, --reset   Reset configuration
+选项:
+  -s, --show    显示当前配置（密钥已遮罩）
+  -r, --reset   重置配置
 ```
 
-**Examples:**
+**示例：**
 
 ```bash
-# Interactive setup
+# 交互式设置
 tinypng config
 
-# Show current config
+# 显示当前配置
 tinypng cfg -s
 
-# Reset configuration
+# 重置配置
 tinypng cfg -r
 ```
 
-### Shortcut Flags
+### 参数简写
 
-| Long Form     | Short | Description         |
-| ------------- | ----- | ------------------- |
-| `compress`    | `c`   | Compress images     |
-| `convert`     | `cv`  | Convert format      |
-| `config`      | `cfg` | Manage config       |
-| `--overwrite` | `-w`  | Overwrite originals |
-| `--resize`    | `-r`  | Enable resize       |
-| `--format`    | `-f`  | Target format       |
-| `--method`    | `-m`  | Resize method       |
-| `--output`    | `-o`  | Output path         |
-| `--key`       | `-k`  | API key(s)          |
+| 完整形式      | 简写 | 描述         |
+| ------------- | ---- | ------------ |
+| `compress`    | `c`  | 压缩图片     |
+| `convert`     | `cv` | 转换格式     |
+| `config`      | `cfg`| 管理配置     |
+| `--overwrite` | `-w` | 覆盖原文件   |
+| `--resize`    | `-r` | 启用调整大小 |
+| `--format`    | `-f` | 目标格式     |
+| `--method`    | `-m` | 调整大小方法 |
+| `--output`    | `-o` | 输出路径     |
+| `--key`       | `-k` | API 密钥     |
 
-### Multiple API Keys
+### 多个 API 密钥
 
-TinyPNG provides 500 free compressions per API key per month. Use multiple keys for unlimited compression:
+TinyPNG 为每个 API 密钥每月提供 500 次免费压缩。使用多个密钥实现无限压缩：
 
-**Setup:**
+**设置：**
 
 ```bash
-# Interactive (comma-separated)
+# 交互式（逗号分隔）
 tinypng config
-Enter your TinyPNG API key(s): key1, key2, key3
+输入你的 TinyPNG API 密钥: key1, key2, key3
 
-# Command line (space-separated)
+# 命令行（空格分隔）
 tinypng c images/*.png -k key1 key2 key3
-
-# Environment variable (comma-separated)
-export TINYPNG_API_KEY="key1,key2,key3"
 ```
 
-**How it works:**
+### 配置文件
 
-- Automatically rotates between keys
-- Uses "least-used" strategy to balance load
-- Real-time quota tracking
-- Smart warnings when approaching limits
-
-### Quota Display
-
-The CLI shows enhanced quota information after each operation:
-
-**Normal Status:**
-
-```
-📊 Quota Status
-   Total: 1455 remaining (45 used, 1500 limit) · 3.0% used
-   Keys: Key 1 (483) · Key 2 (492)
-```
-
-**Low Quota Warning:**
-
-```
-📊 Quota Status
-   Total: 85 remaining (1415 used, 1500 limit) · 94.3% used
-   Keys: Key 1 (45) · Key 2 (40)
-   ⚠️  Warning: 2 key(s) running low (<100 remaining)
-```
-
-**Features:**
-
-- Shows only used keys (saves API calls)
-- Color-coded: Green (>100), Yellow (50-100), Red (<50)
-- Warns when any key has <100 compressions remaining
-
-### Configuration File
-
-API keys are stored in `~/.tinypngrc`:
+API 密钥存储在 `~/.tinypngrc`：
 
 ```json
 {
@@ -349,15 +276,9 @@ API keys are stored in `~/.tinypngrc`:
 }
 ```
 
-**Security:**
+## 库 API
 
-- File is user-readable only (600 permissions)
-- Keys are masked when shown with `config -s`
-- Not tracked in git (`.tinypngrc` in `.gitignore`)
-
-## Library API
-
-### Constructor
+### 构造函数
 
 ```typescript
 import { TinyPNGCompressor } from 'tiny-png'
@@ -365,64 +286,64 @@ import { TinyPNGCompressor } from 'tiny-png'
 const compressor = new TinyPNGCompressor(options)
 ```
 
-**Options:**
+**选项：**
 
-| Option             | Type                 | Default | Description                   |
-| ------------------ | -------------------- | ------- | ----------------------------- |
-| `apiKey`           | `string \| string[]` | -       | TinyPNG API key(s) [REQUIRED] |
-| `compressionCount` | `number`             | `500`   | Monthly limit per key         |
+| 选项               | 类型                 | 默认值 | 描述                     |
+| ------------------ | -------------------- | ------ | ------------------------ |
+| `apiKey`           | `string \| string[]` | -      | TinyPNG API 密钥【必需】 |
+| `compressionCount` | `number`             | `500`  | 每个密钥的月度限制       |
 
-**Example:**
+**示例：**
 
 ```javascript
 const compressor = new TinyPNGCompressor({
   apiKey: ['key1', 'key2', 'key3'],
-  compressionCount: 500, // Default
+  compressionCount: 500, // 默认值
 })
 ```
 
-### Methods
+### 方法
 
 #### `compress(source, options?)`
 
-Compress an image.
+压缩图片。
 
-**Parameters:**
+**参数：**
 
-- `source`: `Buffer | string | ReadableStream` - Image data or file path
-- `options.resize`: `Object` - Optional resize options
+- `source`: `Buffer | string | ReadableStream` - 图片数据或文件路径
+- `options.resize`: `Object` - 可选的调整大小选项
   - `method`: `'scale' | 'fit' | 'cover' | 'thumb'`
   - `width`: `number`
   - `height`: `number`
 
-**Returns:** `Promise<CompressResult>`
+**返回：** `Promise<CompressResult>`
 
 ```typescript
 {
-  output: Buffer // Compressed image data
-  input: Buffer // Original image data (if provided as Buffer)
-  inputSize: number // Original size in bytes
-  outputSize: number // Compressed size in bytes
-  savedBytes: number // Bytes saved
-  savedPercent: string // Percentage saved (e.g., "65.23")
+  output: Buffer // 压缩后的图片数据
+  input: Buffer // 原始图片数据（如果作为 Buffer 提供）
+  inputSize: number // 原始大小（字节）
+  outputSize: number // 压缩后大小（字节）
+  savedBytes: number // 节省的字节
+  savedPercent: string // 节省的百分比（例如 "65.23"）
 }
 ```
 
-**Examples:**
+**示例：**
 
 ```javascript
-// From buffer
+// 从 buffer
 const buffer = readFileSync('input.png')
 const result = await compressor.compress(buffer)
 
-// From file path
+// 从文件路径
 const result = await compressor.compress('input.png')
 
-// From stream
+// 从流
 const stream = createReadStream('input.png')
 const result = await compressor.compress(stream)
 
-// With resize
+// 带调整大小
 const result = await compressor.compress(buffer, {
   resize: {
     method: 'fit',
@@ -431,22 +352,22 @@ const result = await compressor.compress(buffer, {
   },
 })
 
-// Save result
+// 保存结果
 writeFileSync('output.png', result.output)
 ```
 
 #### `convert(source, format)`
 
-Convert image format.
+转换图片格式。
 
-**Parameters:**
+**参数：**
 
-- `source`: `Buffer | string | ReadableStream` - Image data or file path
-- `format`: `'image/webp' | 'image/png' | 'image/jpeg' | 'image/avif'` - Target format
+- `source`: `Buffer | string | ReadableStream` - 图片数据或文件路径
+- `format`: `'image/webp' | 'image/png' | 'image/jpeg' | 'image/avif'` - 目标格式
 
-**Returns:** `Promise<Buffer>` - Converted image data
+**返回：** `Promise<Buffer>` - 转换后的图片数据
 
-**Example:**
+**示例：**
 
 ```javascript
 const buffer = readFileSync('input.png')
@@ -456,123 +377,116 @@ writeFileSync('output.webp', webp)
 
 #### `getStats()`
 
-Get statistics for each API key.
+获取每个 API 密钥的统计信息。
 
-**Returns:** `PublicKeyStat[]`
+**返回：** `PublicKeyStat[]`
 
 ```typescript
 {
-  keyIndex: number // Key index (0-based)
-  compressionCount: number // Current usage count
-  monthlyLimit: number // Monthly limit
-  remaining: number // Remaining compressions
-  percentUsed: string // Usage percentage
-  lastUpdated: number // Last update timestamp
-  disabled: boolean // Whether key is disabled
-  lastError: string | null // Last error message
+  keyIndex: number // 密钥索引（从 0 开始）
+  compressionCount: number // 当前使用计数
+  monthlyLimit: number // 月度限制
+  remaining: number // 剩余压缩次数
+  percentUsed: string // 使用百分比
+  lastUpdated: number // 最后更新时间戳
+  disabled: boolean // 密钥是否禁用
+  lastError: string | null // 最后的错误消息
 }
 ```
 
-**Example:**
+**示例：**
 
 ```javascript
 const stats = compressor.getStats()
 stats.forEach((stat, i) => {
-  console.log(`Key ${i + 1}: ${stat.remaining} remaining`)
+  console.log(`密钥 ${i + 1}: ${stat.remaining} 剩余`)
 })
 ```
 
 #### `getSummary()`
 
-Get summary statistics across all keys.
+获取所有密钥的汇总统计信息。
 
-**Returns:** `KeySummary`
+**返回：** `KeySummary`
 
 ```typescript
 {
-  totalKeys: number // Total number of keys
-  activeKeys: number // Number of active keys
-  disabledKeys: number // Number of disabled keys
-  totalUsed: number // Total compressions used
-  totalLimit: number // Total monthly limit
-  totalRemaining: number // Total remaining compressions
+  totalKeys: number // 密钥总数
+  activeKeys: number // 活动密钥数
+  disabledKeys: number // 禁用密钥数
+  totalUsed: number // 总已用压缩次数
+  totalLimit: number // 总月度限制
+  totalRemaining: number // 总剩余压缩次数
 }
 ```
 
-**Example:**
+**示例：**
 
 ```javascript
 const summary = compressor.getSummary()
-console.log(`Quota: ${summary.totalUsed}/${summary.totalLimit}`)
-console.log(`Remaining: ${summary.totalRemaining}`)
+console.log(`配额: ${summary.totalUsed}/${summary.totalLimit}`)
+console.log(`剩余: ${summary.totalRemaining}`)
 ```
 
 #### `resetCounts()`
 
-Reset compression counts (call at the start of each month).
+重置压缩计数（在每月开始时调用）。
 
-**Example:**
+**示例：**
 
 ```javascript
 compressor.resetCounts()
 ```
 
-### Events
+### 事件
 
-The compressor emits events for progress tracking:
+压缩器会发出事件用于进度追踪：
 
 ```javascript
-// Initialization
+// 初始化
 compressor.on('init', data => {
-  console.log(`Initialized with ${data.keyCount} keys`)
+  console.log(`使用 ${data.keyCount} 个密钥初始化`)
 })
 
-// Compression start
+// 压缩开始
 compressor.on('compress-start', data => {
-  console.log(`Starting compression with key ${data.keyIndex}`)
+  console.log(`使用密钥 ${data.keyIndex} 开始压缩`)
 })
 
-// Compression success
+// 压缩成功
 compressor.on('compress-success', data => {
-  console.log(`Saved ${data.savedBytes} bytes (${data.savedPercent}%)`)
+  console.log(`节省 ${data.savedBytes} 字节 (${data.savedPercent}%)`)
 })
 
-// Compression error
+// 压缩错误
 compressor.on('compress-error', data => {
-  console.error(`Error: ${data.error.message}`)
+  console.error(`错误: ${data.error.message}`)
 })
 
-// Progress (for streams)
+// 进度（用于流）
 compressor.on('progress', data => {
-  console.log(`Progress: ${data.percentage}%`)
+  console.log(`进度: ${data.percentage}%`)
 })
 
-// Quota update
+// 配额更新
 compressor.on('quota-update', data => {
-  console.log(`Quota: ${data.used}/${data.limit}`)
+  console.log(`配额: ${data.used}/${data.limit}`)
 })
 ```
 
-## Configuration
+## 配置
 
-### API Key Priority
+### API 密钥优先级
 
-API keys are resolved in the following order:
+API 密钥按以下顺序解析：
 
-1. **Command line option**: `-k key1 key2 key3`
-2. **Environment variable**: `TINYPNG_API_KEY="key1,key2,key3"`
-3. **Config file**: `~/.tinypngrc`
-4. **Interactive prompt**: If none of the above
+1. **命令行选项**: `-k key1 key2 key3`
+3. **配置文件**: `~/.tinypngrc`
+4. **交互式提示**: 如果以上都没有
 
-### Environment Variables
+## 示例
 
-| Variable          | Description                 | Example            |
-| ----------------- | --------------------------- | ------------------ |
-| `TINYPNG_API_KEY` | API key(s), comma-separated | `"key1,key2,key3"` |
-
-## Examples
-
-### Compress All Images in Directory
+### 压缩目录中的所有图片
 
 ```javascript
 import { TinyPNGCompressor } from 'tiny-png'
@@ -593,14 +507,14 @@ for (const file of files) {
   const result = await compressor.compress(input)
   await writeFile(join('./compressed', file), result.output)
 
-  console.log(`${file}: saved ${result.savedPercent}%`)
+  console.log(`${file}: 节省 ${result.savedPercent}%`)
 }
 
 const summary = compressor.getSummary()
-console.log(`Total quota used: ${summary.totalUsed}/${summary.totalLimit}`)
+console.log(`总配额已用: ${summary.totalUsed}/${summary.totalLimit}`)
 ```
 
-### Batch Convert to WebP
+### 批量转换为 WebP
 
 ```javascript
 import { TinyPNGCompressor } from 'tiny-png'
@@ -620,27 +534,27 @@ for (const file of files) {
   const outputName = basename(file, extname(file)) + '.webp'
   await writeFile(`./webp/${outputName}`, webp)
 
-  console.log(`Converted ${file} → ${outputName}`)
+  console.log(`已转换 ${file} → ${outputName}`)
 }
 ```
 
-### With Progress Tracking
+### 带进度追踪
 
 ```javascript
 const compressor = new TinyPNGCompressor({ apiKey: 'your-key' })
 
 compressor.on('progress', ({ percentage }) => {
-  process.stdout.write(`\rProgress: ${percentage.toFixed(1)}%`)
+  process.stdout.write(`\r进度: ${percentage.toFixed(1)}%`)
 })
 
 compressor.on('compress-success', ({ savedPercent }) => {
-  console.log(`\nSaved ${savedPercent}%`)
+  console.log(`\n节省 ${savedPercent}%`)
 })
 
 const result = await compressor.compress('./large-image.png')
 ```
 
-### Responsive Image Generation
+### 生成响应式图片
 
 ```javascript
 const sizes = [
@@ -659,220 +573,69 @@ for (const size of sizes) {
   })
 
   await writeFile(`hero-${size.name}.jpg`, result.output)
-  console.log(`${size.name}: ${result.savedPercent}% saved`)
+  console.log(`${size.name}: ${result.savedPercent}% 节省`)
 }
 ```
 
-## Testing
+## 测试
 
 ```bash
-# Run all tests
+# 运行所有测试
 npm test
 
-# Run tests in watch mode
+# 监视模式运行测试
 npm run test:watch
 
-# Run tests with coverage
+# 运行测试并生成覆盖率报告
 npm run test:coverage
 ```
 
-**Test Structure:**
+**测试结构：**
 
 ```
 src/
-├── service.test.mjs         # Service layer tests
-├── tinypng.test.mjs         # Main API tests
-├── key-manager.test.mjs     # Key management tests
+├── service.test.mjs         # 服务层测试
+├── tinypng.test.mjs         # 主 API 测试
+├── key-manager.test.mjs     # 密钥管理测试
 └── utils/
-    ├── file-info.test.mjs   # File utilities tests
-    ├── multipart.test.mjs   # Multipart tests
-    └── progress-tracker.test.mjs  # Progress tests
+    ├── file-info.test.mjs   # 文件工具测试
+    ├── multipart.test.mjs   # Multipart 测试
+    └── progress-tracker.test.mjs  # 进度测试
 ```
 
-**Test Coverage:**
+**运行集成测试：**
 
-- ✅ 158 tests passing
-- ✅ Unit tests for all core functionality
-- ✅ Integration tests with real API (optional)
-- ✅ Stream processing tests
-- ✅ Error handling tests
-
-**Run Integration Tests:**
-
-Integration tests require a valid API key:
+集成测试需要有效的 API 密钥：
 
 ```bash
 export TINYPNG_API_KEY="your-api-key"
 npm test
 ```
 
-To skip integration tests:
+跳过集成测试：
 
 ```bash
 npm test -- --grep -Integration
 ```
 
-## Project Structure
+## 项目结构
 
 ```
 tiny-png/
 ├── bin/
-│   └── tinypng.mjs          # CLI entry point
+│   └── tinypng.mjs          # CLI 入口点
 ├── src/
-│   ├── tinypng.mjs          # Main TinyPNGCompressor class
-│   ├── service.mjs          # TinyPNG API service layer
-│   ├── key-manager.mjs      # API key management
-│   ├── constant.mjs         # Constants
+│   ├── tinypng.mjs          # 主 TinyPNGCompressor 类
+│   ├── service.mjs          # TinyPNG API 服务层
+│   ├── key-manager.mjs      # API 密钥管理
+│   ├── constant.mjs         # 常量
 │   └── utils/
-│       ├── file-info.mjs    # File information utilities
-│       ├── multipart.mjs    # Multipart form data
-│       └── progress-tracker.mjs  # Progress tracking
-├── test/                    # Test images and output
+│       ├── file-info.mjs    # 文件信息工具
+│       ├── multipart.mjs    # Multipart 表单数据
+│       └── progress-tracker.mjs  # 进度追踪
+├── test/                    # 测试图片和输出
 ├── package.json
 ├── vitest.config.mjs
 └── README.md
 ```
 
-## Troubleshooting
-
-### "API key is required"
-
-**Solution:** Configure your API key:
-
-```bash
-tinypng config
-# Or
-export TINYPNG_API_KEY="your-key"
-```
-
-### "Unauthorized: Your credentials are invalid"
-
-**Causes:**
-
-- Invalid API key format
-- Network connectivity issues
-- API key revoked
-
-**Solution:** Get a valid API key from [TinyPNG Developer API](https://tinypng.com/developers)
-
-### "Too Many Requests"
-
-**Cause:** Monthly quota (500 compressions/key) exhausted
-
-**Solution:** Add more API keys or wait until next month:
-
-```bash
-tinypng config  # Add more keys
-```
-
-### "Image requires flattening to convert to 'image/jpeg'"
-
-**Cause:** JPEG doesn't support transparency
-
-**Solution:** Use WebP or PNG format instead:
-
-```bash
-tinypng cv image.png -f webp  # ✅ Supports transparency
-```
-
-### "No files matched pattern"
-
-**Causes:**
-
-- Glob pattern doesn't match any files
-- Files don't have supported extensions
-
-**Solution:** Check your file patterns:
-
-```bash
-# List files first
-ls *.png
-
-# Then compress
-tinypng c *.png
-```
-
-## API Reference
-
-For detailed API documentation, see:
-
-- [CLI_README.md](./CLI_README.md) - Complete CLI documentation
-- [CLI_QUICK_START.md](./CLI_QUICK_START.md) - Quick reference guide
-- [TypeScript Definitions](./src/tinypng.d.ts) - Full type definitions
-
-## Related Documentation
-
-- 📚 [CLI Implementation Summary](./CLI_IMPLEMENTATION_SUMMARY.md)
-- 🔄 [Convert Feature Summary](./CONVERT_FEATURE_SUMMARY.md)
-- 📊 [Quota Display Enhancement](./QUOTA_DISPLAY_ENHANCEMENT.md)
-- 🌐 [TinyPNG API Reference](https://tinypng.com/developers/reference)
-
-## Contributing
-
-Contributions are welcome! Please follow these guidelines:
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/my-feature`
-3. Write tests for your changes
-4. Ensure all tests pass: `npm test`
-5. Format code: `npm run format`
-6. Commit changes: `git commit -am 'Add my feature'`
-7. Push to the branch: `git push origin feature/my-feature`
-8. Submit a pull request
-
-### Development Setup
-
-```bash
-# Clone repository
-git clone <repository-url>
-cd tiny-png
-
-# Install dependencies
-npm install
-
-# Run tests
-npm test
-
-# Link CLI locally
-npm link
-
-# Try it out
-tinypng --help
-```
-
-## License
-
-MIT License - see [LICENSE](./LICENSE) file for details
-
-## Acknowledgments
-
-- [TinyPNG](https://tinypng.com/) for the excellent image compression API
-- Built with ❤️ using Node.js, Vitest, Commander.js, and Chalk
-
-## Support
-
-- 📖 [Documentation](./CLI_README.md)
-- 🐛 [Report Issues](https://github.com/your-repo/issues)
-- 💬 [Discussions](https://github.com/your-repo/discussions)
-- 🌐 [TinyPNG API Support](https://tinypng.com/developers/support)
-
-## Changelog
-
-### v1.0.0 (Current)
-
-- ✨ Initial release
-- 🗜️ Image compression (PNG, JPEG, WebP, AVIF)
-- 🔄 Format conversion
-- 📐 Intelligent resizing (scale, fit, cover, thumb)
-- 🔑 Multiple API key support with smart rotation
-- 💻 Full-featured CLI with beautiful output
-- 📊 Enhanced quota tracking and warnings
-- 🎯 Batch processing with progress tracking
-- 📚 Comprehensive documentation and examples
-- ✅ Extensive test coverage
-
----
-
-**Get your free API key at [tinypng.com/developers](https://tinypng.com/developers)**
-
-**Made with ❤️ for the web development community**

@@ -176,18 +176,15 @@ function getOutputPath(inputPath, options) {
 
   if (options.output) {
     // Check if output is a directory or file
-    if (options.output.endsWith('/') || existsSync(options.output)) {
-      const stat = statSync(options.output)
-      if (stat.isDirectory()) {
-        return join(options.output, `${base}${ext}`)
-      }
+    if (options.output.endsWith('/') || (existsSync(options.output) && statSync(options.output).isDirectory())) {
+      return join(options.output, `${base}${ext}`)
     }
     // Single file mode
     return options.output
   }
 
-  // Default: ./output/ directory
-  const outputDir = join(process.cwd(), 'output')
+  // Default: output/ directory relative to input file's directory
+  const outputDir = join(dir, 'output')
   return join(outputDir, `${base}${ext}`)
 }
 
@@ -219,18 +216,7 @@ async function compressCommand(files, options) {
 
   console.log(chalk.gray(`Found ${filesToProcess.length} file(s) to compress\n`))
 
-  // Ensure output directory exists
-  if (!options.overwrite && options.output) {
-    const outputDir = options.output.endsWith('/') ? options.output : dirname(options.output)
-    if (!existsSync(outputDir)) {
-      mkdirSync(outputDir, { recursive: true })
-    }
-  } else if (!options.overwrite) {
-    const defaultOutput = join(process.cwd(), 'output')
-    if (!existsSync(defaultOutput)) {
-      mkdirSync(defaultOutput, { recursive: true })
-    }
-  }
+  // Output directories will be created per-file as needed
 
   const results = {
     success: 0,
@@ -355,7 +341,7 @@ async function compressCommand(files, options) {
   }
 
   if (!options.overwrite) {
-    const outputInfo = options.output || './output/'
+    const outputInfo = options.output || '<input-dir>/output/'
     console.log(chalk.gray(`\nOutput: ${outputInfo}\n`))
   } else {
     console.log(chalk.yellow(`\n⚠️  Files were overwritten\n`))
@@ -387,13 +373,7 @@ async function convertCommand(files, options) {
 
   console.log(chalk.gray(`Found ${filesToProcess.length} file(s) to convert\n`))
 
-  // Ensure output directory exists
-  if (!options.overwrite) {
-    const outputDir = options.output || join(process.cwd(), 'output')
-    if (!existsSync(outputDir)) {
-      mkdirSync(outputDir, { recursive: true })
-    }
-  }
+  // Output directories will be created per-file as needed
 
   const results = {
     success: 0,
@@ -521,7 +501,7 @@ async function convertCommand(files, options) {
   }
 
   if (!options.overwrite) {
-    const outputInfo = options.output || './output/'
+    const outputInfo = options.output || '<input-dir>/output/'
     console.log(chalk.gray(`\nOutput: ${outputInfo}\n`))
   } else {
     console.log(chalk.yellow(`\n⚠️  Files were overwritten\n`))
@@ -591,7 +571,7 @@ program
   .alias('c')
   .description('Compress images')
   .option('-k, --key <keys...>', 'API key(s) - separate multiple keys with spaces or commas')
-  .option('-o, --output <path>', 'Output directory or file (default: ./output/)')
+  .option('-o, --output <path>', 'Output directory or file (default: <input-dir>/output/)')
   .option('-w, --overwrite', 'Overwrite original files')
   .option('-r, --resize', 'Enable resize')
   .option('-m, --method <method>', 'Resize method (scale, fit, cover, thumb)')
@@ -606,7 +586,7 @@ program
   .description('Convert images to different format')
   .option('-k, --key <keys...>', 'API key(s) - separate multiple keys with spaces or commas')
   .option('-f, --format <format>', 'Target format (webp, png, jpeg, avif)')
-  .option('-o, --output <path>', 'Output directory or file (default: ./output/)')
+  .option('-o, --output <path>', 'Output directory or file (default: <input-dir>/output/)')
   .option('-w, --overwrite', 'Overwrite original files')
   .action(convertCommand)
 
