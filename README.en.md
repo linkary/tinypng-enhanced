@@ -23,6 +23,8 @@ English | [简体中文](./README.md)
 - 🔄 Format conversion (PNG ↔ JPEG ↔ WebP ↔ AVIF)
 - 📐 Intelligent resizing (scale, fit, cover, thumb)
 - 🎯 Batch processing with progress tracking
+- ⚡ Concurrent processing (3-5x faster) with configurable concurrency (1-10)
+- 📊 Individual progress bars for each file during batch operations
 
 ## Installation
 
@@ -52,17 +54,20 @@ tinypng config
 **Compress images:**
 
 ```bash
-# Single file
-tinypng compress image.png
+# Single file (default command)
+tinypng image.png
 
-# Multiple files
-tinypng c *.png *.jpg
+# Multiple files (with default 3 concurrent operations)
+tinypng *.png *.jpg
 
-# Entire directory
-tinypng c ./photos/
+# Entire directory with custom concurrency
+tinypng ./photos/ -n 5
+
+# Maximum concurrency for large batches
+tinypng images/*.png --concurrent 10
 
 # With resize
-tinypng c banner.jpg -r -m fit --width 1920 --height 1080
+tinypng banner.jpg -r -m fit --width 1920 --height 1080
 ```
 
 **Convert formats:**
@@ -75,16 +80,25 @@ tinypng convert *.png -f webp
 tinypng cv images/*.jpg -f avif
 ```
 
-**Output:**
+**Output (with multi-progress bars):**
 
 ```
 🗜️  TinyPNG Compress
 
-Found 3 file(s) to compress
+Found 5 file(s) to compress
+Processing with 3 concurrent operation(s)
+
+image1.png                          |████████████████████| 100% | ✓ Done
+image2.jpg                          |████████████████████| 100% | ✓ Done
+image3.png                          |███████████░░░░░░░░░| 55% | Downloading...
+image4.png                          |█████░░░░░░░░░░░░░░░| 25% | Image compressed
+image5.jpg                          |██░░░░░░░░░░░░░░░░░░| 10% | Uploading...
 
 ✓ image1.png → 512 KB → 128 KB (-75.00%)
 ✓ image2.jpg → 1.2 MB → 450 KB (-62.50%)
 ✓ image3.png → 256 KB → 89 KB (-65.23%)
+✓ image4.png → 384 KB → 120 KB (-68.75%)
+✓ image5.jpg → 2.1 MB → 780 KB (-62.86%)
 
 📊 Summary
 ──────────────────────────────────────────────────
@@ -139,13 +153,14 @@ Compress images with optional resizing.
 tinypng compress <files...> [options]
 
 Options:
-  -k, --key <keys...>     API key(s) - separate multiple keys with spaces or commas
-  -o, --output <path>     Output directory or file (default: <input-dir>/output/)
-  -w, --overwrite         Overwrite original files
-  -r, --resize            Enable resize
-  -m, --method <method>   Resize method (scale, fit, cover, thumb)
-  --width <width>         Target width
-  --height <height>       Target height
+  -k, --key <keys...>       API key(s) - separate multiple keys with spaces or commas
+  -o, --output <path>       Output directory or file (default: <input-dir>/output/)
+  -w, --overwrite           Overwrite original files
+  -r, --resize              Enable resize
+  -m, --method <method>     Resize method (scale, fit, cover, thumb)
+  --width <width>           Target width
+  --height <height>         Target height
+  -n, --concurrent <number> Number of concurrent operations (default: 3, max: 10)
 ```
 
 **Resize Methods:**

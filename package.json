@@ -1,7 +1,7 @@
 {
   "name": "tinypng-enhanced",
-  "version": "1.0.0",
-  "description": "TinyPNG Compressor with multiple API keys support",
+  "version": "2.1.0",
+  "description": "TinyPNG Compressor with multiple API keys support and concurrent processing",
   "main": "src/tinypng.mjs",
   "bin": {
     "tinypng": "./bin/tinypng.mjs"
@@ -38,6 +38,7 @@
   },
   "dependencies": {
     "chalk": "^5.6.2",
+    "cli-progress": "^3.12.0",
     "commander": "^14.0.1",
     "ora": "^9.0.0"
   }

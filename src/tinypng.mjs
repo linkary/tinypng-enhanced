@@ -1,9 +1,9 @@
 import { EventEmitter } from 'node:events'
 import { writeFileSync } from 'node:fs'
 import { Readable } from 'node:stream'
-import { sourceToBuffer } from './utils/source-to-buffer.mjs'
+import { createCompressingEvent, createProgressEvent } from './utils/event.mjs'
 import { KeyManager } from './key-manager.mjs'
-import * as TinyPNGService from './service.mjs'
+import * as CompressionWorkflow from './workflows/compression.mjs'
 
 /**
  * TinyPNG Compressor with multiple API key support
@@ -35,8 +35,8 @@ export default class TinyPNGCompressor extends EventEmitter {
   }
 
   /**
-   * Compress a file or buffer using TinyPNG API
-   * @param {string|Buffer|Readable} source - File path, buffer, or readable stream
+   * Compress a file, buffer, or URL using TinyPNG API
+   * @param {string|Buffer|Readable} source - File path, URL, buffer, or readable stream
    * @param {Object} [options] - Compression options
    * @param {Object} [options.resize] - Resize options
    * @param {string} [options.resize.method] - Resize method (scale, fit, cover, thumb)
@@ -46,17 +46,8 @@ export default class TinyPNGCompressor extends EventEmitter {
    * @see https://tinypng.com/developers/reference#request-options
    */
   async compress(source, options = {}) {
-    // Convert source to buffer
-    const { buffer, filename, type, size } = await sourceToBuffer(source)
-
-    // Emit start event with source metadata
-    this.emit('start', {
-      type,
-      filename,
-      size,
-    })
-
-    const originalSize = buffer.length
+    // Prepare source for compression
+    const sourceData = await CompressionWorkflow.prepareSource(source, this.emit.bind(this))
 
     // Try compression with key rotation
     let lastError
@@ -69,103 +60,76 @@ export default class TinyPNGCompressor extends EventEmitter {
         // Select best available key (least-used strategy)
         keyStat = this.keyManager.selectBestKey()
 
-        this.emit('compressing', {
-          keyIndex: keyStat.index,
-          attempt: attempt + 1,
-          maxRetries,
-          compressionCount: keyStat.compressionCount,
-          remaining:
-            keyStat.compressionCount === null ? 'unknown' : keyStat.monthlyLimit - keyStat.compressionCount,
-        })
+        this.emit(
+          'compressing',
+          createCompressingEvent(
+            keyStat.index,
+            attempt + 1,
+            maxRetries,
+            keyStat.compressionCount,
+            keyStat.monthlyLimit
+          )
+        )
 
         // Step 1: Upload and compress image
-        const shrinkResult = await TinyPNGService.shrink(buffer, keyStat.key)
+        const shrinkResult = await CompressionWorkflow.uploadAndShrink(
+          sourceData,
+          source,
+          keyStat,
+          this.emit.bind(this)
+        )
 
-        // Update compression count from API response
-        if (shrinkResult.compressionCount !== null) {
-          this.keyManager.updateStats(keyStat.index, shrinkResult.compressionCount)
+        this.emit('progress', createProgressEvent('compressed', 0.4, 'Image compressed'))
 
-          // Emit quota update event
-          this.emit('quotaUpdate', {
-            keyIndex: keyStat.index,
-            compressionCount: shrinkResult.compressionCount,
-            remaining: keyStat.monthlyLimit - shrinkResult.compressionCount,
-          })
-        }
+        // Update quota after shrink
+        CompressionWorkflow.updateQuota(shrinkResult, keyStat, this.keyManager, this.emit.bind(this))
 
-        // Step 2: Download compressed image (with optional resize)
-        let downloadResponse
+        // Step 2: Download compressed or resized image
+        const downloadResult = await CompressionWorkflow.downloadImage(
+          shrinkResult.outputUrl,
+          options,
+          keyStat,
+          this.emit.bind(this)
+        )
 
-        if (options.resize) {
-          // Apply resize before downloading
-          const resizeResult = await TinyPNGService.resize(
-            shrinkResult.outputUrl,
-            options.resize,
-            keyStat.key
-          )
+        // Update quota after download/resize if applicable
+        CompressionWorkflow.updateQuota(downloadResult, keyStat, this.keyManager, this.emit.bind(this))
 
-          // Update compression count from API response
-          if (resizeResult.compressionCount !== null) {
-            this.keyManager.updateStats(keyStat.index, resizeResult.compressionCount)
-
-            // Emit quota update event
-            this.emit('quotaUpdate', {
-              keyIndex: keyStat.index,
-              compressionCount: resizeResult.compressionCount,
-              remaining: keyStat.monthlyLimit - resizeResult.compressionCount,
-            })
-          }
-
-          downloadResponse = resizeResult.response
-        } else {
-          // Download directly without resize
-          downloadResponse = await TinyPNGService.download(shrinkResult.outputUrl, keyStat.key)
-        }
-
-        const compressedBuffer = Buffer.from(await downloadResponse.arrayBuffer())
-        const compressionRatio = ((1 - compressedBuffer.length / originalSize) * 100).toFixed(2)
-
-        // Get final stats
+        // Step 3: Finalize and return result
         const finalKeyStat = this.keyManager.getCurrentKey()
-
-        this.emit('success', {
-          keyIndex: finalKeyStat.index,
-          originalSize,
-          compressedSize: compressedBuffer.length,
-          savedBytes: originalSize - compressedBuffer.length,
-          compressionRatio: `${compressionRatio}%`,
-          filename,
-          compressionCount: finalKeyStat.compressionCount,
-          remaining:
-            finalKeyStat.compressionCount === null
-              ? null
-              : finalKeyStat.monthlyLimit - finalKeyStat.compressionCount,
-        })
-
-        return compressedBuffer
+        return await CompressionWorkflow.finalizeResult(
+          downloadResult.response,
+          sourceData,
+          finalKeyStat,
+          this.emit.bind(this)
+        )
       } catch (error) {
         lastError = error
 
         // Handle API errors from service layer
         if (error.status && keyStat) {
-          await this._handleServiceError(error, keyStat, attempt, maxRetries)
+          await CompressionWorkflow.handleServiceError(
+            error,
+            keyStat,
+            attempt,
+            maxRetries,
+            this.keyManager,
+            this.emit.bind(this),
+            this._delay.bind(this)
+          )
         } else {
           // Handle network and other errors
-          this.emit('error', {
-            type: 'unknown',
-            keyIndex: keyStat?.index,
+          const shouldContinue = await CompressionWorkflow.handleNetworkError(
             error,
-          })
+            attempt,
+            maxRetries,
+            keyStat?.index,
+            this.emit.bind(this),
+            this._delay.bind(this)
+          )
 
-          // Retry on network errors
-          if (error.cause?.code === 'ECONNREFUSED' || error.cause?.code === 'ETIMEDOUT') {
-            if (attempt < maxRetries - 1) {
-              await this._delay(1000 * (attempt + 1))
-              continue
-            }
-          } else {
-            // Unknown error, don't retry
-            throw error
+          if (shouldContinue) {
+            continue
           }
         }
       }
@@ -173,87 +137,6 @@ export default class TinyPNGCompressor extends EventEmitter {
 
     // All retries failed
     throw new Error(`压缩失败，已尝试 ${maxRetries} 次: ${lastError?.message || 'Unknown error'}`)
-  }
-
-  /**
-   * Handle errors from TinyPNG service layer
-   * @private
-   */
-  async _handleServiceError(error, keyStat, attempt, maxRetries) {
-    // Handle different HTTP status codes
-    if (error.status === 401) {
-      // Unauthorized - invalid API key
-      this.keyManager.markKeyError(keyStat.index, error)
-
-      this.emit('keyError', {
-        keyIndex: keyStat.index,
-        error: error.message,
-      })
-
-      this.emit('error', {
-        type: 'account',
-        keyIndex: keyStat.index,
-        message: 'API Key 无效',
-        error,
-        status: 401,
-      })
-
-      // Next iteration will select a different key
-      throw error
-    } else if (error.status === 429) {
-      // Too Many Requests - rate limit exceeded
-      this.keyManager.markKeyError(keyStat.index, error)
-
-      this.emit('keyError', {
-        keyIndex: keyStat.index,
-        error: error.message,
-      })
-
-      this.emit('error', {
-        type: 'account',
-        keyIndex: keyStat.index,
-        message: 'API Key 已达到月度限制',
-        error,
-        status: 429,
-      })
-
-      // Next iteration will select a different key
-      throw error
-    } else if (error.status === 400 || error.status === 415) {
-      // Bad Request or Unsupported Media Type
-      this.emit('error', {
-        type: 'client',
-        message: '请求错误，请检查输入图片格式',
-        error,
-        status: error.status,
-      })
-      throw error
-    } else if (error.status >= 500) {
-      // Server Error
-      this.emit('error', {
-        type: 'server',
-        keyIndex: keyStat.index,
-        message: 'TinyPNG 服务器错误，稍后重试',
-        error,
-        status: error.status,
-      })
-
-      // Retry with exponential backoff
-      if (attempt < maxRetries - 1) {
-        await this._delay(1000 * (attempt + 1))
-      }
-      throw error
-    } else {
-      // Other errors
-      this.emit('error', {
-        type: 'unknown',
-        keyIndex: keyStat.index,
-        message: `HTTP ${error.status}: ${error.statusText}`,
-        error,
-        status: error.status,
-      })
-      throw error
-    }
   }
 
   /**
