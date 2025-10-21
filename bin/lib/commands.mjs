@@ -5,7 +5,7 @@
 import { existsSync, writeFileSync, statSync } from 'node:fs'
 import chalk from 'chalk'
 import { getApiKey, loadConfig, saveConfig, promptApiKey, CONFIG_PATH } from './config.mjs'
-import { expandFiles } from './file-utils.mjs'
+import { expandFiles, getActualOutputDir } from './file-utils.mjs'
 import { processFilesWithConcurrency, processConvertFilesWithConcurrency } from './processors.mjs'
 import {
   displayCompressionSummary,
@@ -66,7 +66,7 @@ export async function compressCommand(files, options) {
   // Display summary
   displayCompressionSummary(results)
   displayQuotaStatus(compressor)
-  displayOutputInfo(options)
+  displayOutputInfo(options, getActualOutputDir(options, filesToProcess))
 }
 
 /**
@@ -125,7 +125,7 @@ export async function convertCommand(files, options) {
   // Display summary
   displayConversionSummary(results)
   displayQuotaStatus(compressor)
-  displayOutputInfo(options)
+  displayOutputInfo(options, getActualOutputDir(options, filesToProcess))
 }
 
 /**

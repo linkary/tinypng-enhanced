@@ -11,6 +11,25 @@ import { isUrl, getFilenameFromUrl } from '../../src/utils/url.mjs'
 export const SUPPORTED_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.webp', '.avif']
 
 /**
+ * Get actual output directory path for display
+ * @param {Object} options - Command options
+ * @param {string} [options.output] - Custom output directory
+ * @param {boolean} [options.overwrite] - Whether files are overwritten
+ * @param {string[]} filesToProcess - Array of file paths to process
+ * @returns {string|null} Actual output directory path or null
+ */
+export function getActualOutputDir(options, filesToProcess) {
+  // If custom output specified or overwriting, return null (handled differently)
+  if (options.output || options.overwrite || filesToProcess.length === 0) {
+    return null
+  }
+
+  // Get the directory of the first file
+  const firstFileDir = dirname(resolve(filesToProcess[0]))
+  return join(firstFileDir, 'output')
+}
+
+/**
  * Recursively scan directory for image files with depth limit
  * @param {string} dir - Directory to scan
  * @param {number} currentDepth - Current depth level

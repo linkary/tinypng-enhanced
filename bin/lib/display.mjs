@@ -94,10 +94,12 @@ export function displayQuotaStatus(compressor) {
 
 /**
  * Display output information
+ * @param {Object} options - Command options
+ * @param {string} [actualOutputDir] - The actual output directory path
  */
-export function displayOutputInfo(options) {
+export function displayOutputInfo(options, actualOutputDir = null) {
   if (!options.overwrite) {
-    const outputInfo = options.output || '<input-dir>/output/'
+    const outputInfo = options.output || actualOutputDir || 'output/'
     console.log(chalk.gray(`\nOutput: ${outputInfo}\n`))
   } else {
     console.log(chalk.yellow(`\n⚠️  Files were overwritten\n`))
