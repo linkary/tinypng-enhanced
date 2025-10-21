@@ -10,6 +10,14 @@
     ".": "./src/tinypng.mjs",
     "./service": "./src/service.mjs"
   },
+  "files": [
+    "bin",
+    "src",
+    "package.json",
+    "README.md",
+    "README.en.md",
+    "LICENSE"
+  ],
   "scripts": {
     "env": "export TINYPNG_API_KEY=$TINYPNG_API_KEY",
     "test": "vitest run",
