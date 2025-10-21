@@ -1,6 +1,6 @@
 {
   "name": "tinypng-enhanced",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "TinyPNG Compressor with multiple API keys support and concurrent processing",
   "main": "src/tinypng.mjs",
   "bin": {
