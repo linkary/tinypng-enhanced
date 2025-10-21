@@ -13,11 +13,10 @@
   "scripts": {
     "env": "export TINYPNG_API_KEY=$TINYPNG_API_KEY",
     "test": "vitest run",
-    "test:env": "npm run env && vitest run",
     "test:watch": "npm run env && vitest",
     "test:coverage": "npm run env && vitest run --coverage",
-    "test:unit": "vitest run -t 'Unit Tests'",
-    "test:integration": "npm run env && vitest run -t 'Integration Tests'",
+    "test:unit": "vitest run --exclude src/service.test.mjs --exclude src/tinypng.test.mjs",
+    "test:integration": "npm run env && vitest run src/service.test.mjs src/tinypng.test.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepublishOnly": "npm run test:unit"
