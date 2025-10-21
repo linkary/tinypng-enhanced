@@ -1,4 +1,4 @@
-#  TinyPNG 压缩器
+# TinyPNG 压缩器
 
 支持多个 API 密钥的[TinyPNG](https://tinypng.com/) CLI及模块工具。
 
@@ -7,6 +7,8 @@
 [![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen)]()
 
 [English](./README.en.md) | 简体中文
+
+![](https://img.alicdn.com/imgextra/i3/O1CN01DQ0dwA1ROld2OAkHc_!!6000000002102-1-tps-888-632.gif)
 
 ## 特性
 

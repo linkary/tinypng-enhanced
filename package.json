@@ -1,10 +1,10 @@
 {
   "name": "tinypng-enhanced",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "TinyPNG Compressor with multiple API keys support and concurrent processing",
   "main": "src/tinypng.mjs",
   "bin": {
-    "tinypng": "./bin/tinypng.mjs"
+    "tinypng": "bin/tinypng.mjs"
   },
   "exports": {
     ".": "./src/tinypng.mjs",
@@ -40,5 +40,15 @@
     "cli-progress": "^3.12.0",
     "commander": "^14.0.1",
     "ora": "^9.0.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/linkary/tinypng-enhanced.git"
+  },
+  "author": "linkary",
+  "types": "./src/tinypng.d.ts",
+  "bugs": {
+    "url": "https://github.com/linkary/tinypng-enhanced/issues"
+  },
+  "homepage": "https://github.com/linkary/tinypng-enhanced#readme"
 }

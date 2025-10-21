@@ -8,6 +8,8 @@ A powerful [TinyPNG](https://tinypng.com/) CLI and module tool with multiple API
 
 English | [简体中文](./README.md)
 
+![](https://img.alicdn.com/imgextra/i3/O1CN01DQ0dwA1ROld2OAkHc_!!6000000002102-1-tps-888-632.gif)
+
 ## Features
 
 **Advanced API Key Management**
