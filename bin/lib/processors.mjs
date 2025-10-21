@@ -29,6 +29,7 @@ export async function processSingleFile(
   const isUrlInput = isUrl(inputPath)
   let fileBar = null
   let lastProgress = 0
+  let isComplete = false // Track completion to prevent progress updates after done
 
   try {
     // Use shared compressor if provided, otherwise create dedicated one
@@ -45,16 +46,17 @@ export async function processSingleFile(
       // Update file's progress bar based on progress events
       // Only update when progress actually changes to avoid duplicate lines
       fileCompressor.on('progress', data => {
-        if (data.progress !== undefined && fileBar) {
-          const currentProgress = Math.round(data.progress * 100)
-          // Only update if progress changed
-          if (currentProgress !== lastProgress) {
-            lastProgress = currentProgress
-            fileBar.update(currentProgress, {
-              filename: displayName.substring(0, 40),
-              status: data.message ? data.message.substring(0, 18) : 'Processing',
-            })
-          }
+        // Don't update if already marked complete
+        if (isComplete || !fileBar || data.progress === undefined) return
+
+        const currentProgress = Math.round(data.progress * 100)
+        // Only update if progress changed and not at 100% yet
+        if (currentProgress !== lastProgress && currentProgress < 100) {
+          lastProgress = currentProgress
+          fileBar.update(currentProgress, {
+            filename: displayName.substring(0, 40),
+            status: data.message ? data.message.substring(0, 18) : 'Processing',
+          })
         }
       })
     }
@@ -106,7 +108,8 @@ export async function processSingleFile(
     results.totalOriginalSize += originalSize
     results.totalCompressedSize += compressedSize
 
-    // Update progress bar to complete
+    // Mark as complete and update progress bar to final state
+    isComplete = true
     if (fileBar) {
       fileBar.update(100, {
         filename: displayName.substring(0, 40),
@@ -125,7 +128,8 @@ export async function processSingleFile(
     results.failed++
     results.errors.push({ file: inputPath, error: error.message })
 
-    // Update progress bar to show error
+    // Mark as complete and update progress bar to show error
+    isComplete = true
     if (fileBar) {
       fileBar.update(100, {
         filename: displayName.substring(0, 40),
@@ -158,6 +162,7 @@ export async function processSingleConvert(
   const isUrlInput = isUrl(inputPath)
   let fileBar = null
   let lastProgress = 0
+  let isComplete = false // Track completion to prevent progress updates after done
 
   try {
     // Use shared compressor if provided, otherwise create dedicated one
@@ -174,16 +179,17 @@ export async function processSingleConvert(
       // Update file's progress bar based on progress events
       // Only update when progress actually changes to avoid duplicate lines
       fileCompressor.on('progress', data => {
-        if (data.progress !== undefined && fileBar) {
-          const currentProgress = Math.round(data.progress * 100)
-          // Only update if progress changed
-          if (currentProgress !== lastProgress) {
-            lastProgress = currentProgress
-            fileBar.update(currentProgress, {
-              filename: displayName.substring(0, 40),
-              status: data.message ? data.message.substring(0, 18) : 'Processing',
-            })
-          }
+        // Don't update if already marked complete
+        if (isComplete || !fileBar || data.progress === undefined) return
+
+        const currentProgress = Math.round(data.progress * 100)
+        // Only update if progress changed and not at 100% yet
+        if (currentProgress !== lastProgress && currentProgress < 100) {
+          lastProgress = currentProgress
+          fileBar.update(currentProgress, {
+            filename: displayName.substring(0, 40),
+            status: data.message ? data.message.substring(0, 18) : 'Processing',
+          })
         }
       })
     }
@@ -246,7 +252,8 @@ export async function processSingleConvert(
 
     results.success++
 
-    // Update progress bar to complete
+    // Mark as complete and update progress bar to final state
+    isComplete = true
     if (fileBar) {
       fileBar.update(100, {
         filename: displayName.substring(0, 40),
@@ -264,7 +271,8 @@ export async function processSingleConvert(
     results.failed++
     results.errors.push({ file: inputPath, error: error.message })
 
-    // Update progress bar to show error
+    // Mark as complete and update progress bar to show error
+    isComplete = true
     if (fileBar) {
       fileBar.update(100, {
         filename: displayName.substring(0, 40),
