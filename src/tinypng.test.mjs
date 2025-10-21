@@ -17,7 +17,8 @@ const __dirname = dirname(__filename)
 const OUTPUT_DIR = join(__dirname, '../test/output')
 const TEST_IMAGE = join(__dirname, '../test/coding.png')
 
-const [API_KEY, EXTRA_API_KEY] = process.env.TINYPNG_API_KEY?.split(',')
+const TINYPNG_API_KEY = process.env.TINYPNG_API_KEY || ''
+const [API_KEY, EXTRA_API_KEY] = TINYPNG_API_KEY.split(',')
 
 // Setup and cleanup
 beforeAll(() => {
