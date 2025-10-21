@@ -12,7 +12,8 @@
   },
   "scripts": {
     "env": "export TINYPNG_API_KEY=$TINYPNG_API_KEY",
-    "test": "npm run env && vitest run",
+    "test": "vitest run",
+    "test:env": "npm run env && vitest run",
     "test:watch": "npm run env && vitest",
     "test:coverage": "npm run env && vitest run --coverage",
     "test:ui": "npm run env && vitest --ui",
