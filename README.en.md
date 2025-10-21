@@ -1,6 +1,6 @@
 # TinyPNG Compressor
 
-A powerful Node.js library and CLI tool for image compression and format conversion using the [TinyPNG API](https://tinypng.com/).
+A powerful [TinyPNG](https://tinypng.com/) CLI and module tool with multiple API key support.
 
 [![Tests](https://img.shields.io/badge/tests-passing-brightgreen)]()
 [![License](https://img.shields.io/badge/license-MIT-blue)]()
@@ -23,8 +23,6 @@ English | [简体中文](./README.md)
 - 🔄 Format conversion (PNG ↔ JPEG ↔ WebP ↔ AVIF)
 - 📐 Intelligent resizing (scale, fit, cover, thumb)
 - 🎯 Batch processing with progress tracking
-- ⚡ Concurrent processing (3-5x faster) with configurable concurrency (1-10)
-- 📊 Individual progress bars for each file during batch operations
 
 ## Installation
 
@@ -57,14 +55,15 @@ tinypng config
 # Single file (default command)
 tinypng image.png
 
-# Multiple files (with default 3 concurrent operations)
+# Or use explicit command
+tinypng compress image.png
+tinypng c image.png
+
+# Multiple files (automatically shows progress bar)
 tinypng *.png *.jpg
 
-# Entire directory with custom concurrency
-tinypng ./photos/ -n 5
-
-# Maximum concurrency for large batches
-tinypng images/*.png --concurrent 10
+# Entire directory
+tinypng ./photos/
 
 # With resize
 tinypng banner.jpg -r -m fit --width 1920 --height 1080
@@ -80,25 +79,17 @@ tinypng convert *.png -f webp
 tinypng cv images/*.jpg -f avif
 ```
 
-**Output (with multi-progress bars):**
+**Output (with progress bar for batch operations):**
 
 ```
 🗜️  TinyPNG Compress
 
-Found 5 file(s) to compress
-Processing with 3 concurrent operation(s)
+Found 3 file(s) to compress
 
-image1.png                          |████████████████████| 100% | ✓ Done
-image2.jpg                          |████████████████████| 100% | ✓ Done
-image3.png                          |███████████░░░░░░░░░| 55% | Downloading...
-image4.png                          |█████░░░░░░░░░░░░░░░| 25% | Image compressed
-image5.jpg                          |██░░░░░░░░░░░░░░░░░░| 10% | Uploading...
-
-✓ image1.png → 512 KB → 128 KB (-75.00%)
-✓ image2.jpg → 1.2 MB → 450 KB (-62.50%)
-✓ image3.png → 256 KB → 89 KB (-65.23%)
-✓ image4.png → 384 KB → 120 KB (-68.75%)
-✓ image5.jpg → 2.1 MB → 780 KB (-62.86%)
+Progress |████████████████████| 100% | 3/3 files | image3.png
+  ✓ image1.png → 512 KB → 128 KB (-75.00%)
+  ✓ image2.jpg → 1.2 MB → 450 KB (-62.50%)
+  ✓ image3.png → 256 KB → 89 KB (-65.23%)
 
 📊 Summary
 ──────────────────────────────────────────────────
@@ -112,9 +103,15 @@ Total saved: 1.02 MB (70.15%)
 Output: <input-dir>/output/
 ```
 
-**Demo:**
+**Examples:**
 
-![](https://img.alicdn.com/imgextra/i2/O1CN01QMBEJM20fGRdf8bEg_!!6000000006876-1-tps-724-421.gif)
+1. Overwrite original images
+
+![](https://img.alicdn.com/imgextra/i3/O1CN012xlV8B1KJXnmC616R_!!6000000001143-1-tps-888-632.gif)
+
+2. Save to output directory
+
+![](https://img.alicdn.com/imgextra/i3/O1CN01DQ0dwA1ROld2OAkHc_!!6000000002102-1-tps-888-632.gif)
 
 ### Library Usage
 
@@ -145,32 +142,51 @@ console.log(`Quota used: ${summary.totalUsed}/${summary.totalLimit}`)
 
 ### Commands
 
+#### Default Command (Compress)
+
+⚡ **New in v2.0:** `tinypng <files>` now defaults to compress!
+
+```bash
+# New shortcut (v2.0+)
+tinypng image.png
+
+# Equivalent to
+tinypng compress image.png
+tinypng c image.png
+```
+
 #### `tinypng compress` (alias: `c`)
 
 Compress images with optional resizing.
 
 ```bash
 tinypng compress <files...> [options]
+# Or shorthand
+tinypng <files...> [options]
 
 Options:
-  -k, --key <keys...>       API key(s) - separate multiple keys with spaces or commas
-  -o, --output <path>       Output directory or file (default: <input-dir>/output/)
-  -w, --overwrite           Overwrite original files
-  -r, --resize              Enable resize
-  -m, --method <method>     Resize method (scale, fit, cover, thumb)
-  --width <width>           Target width
-  --height <height>         Target height
-  -n, --concurrent <number> Number of concurrent operations (default: 3, max: 10)
+  -k, --key <keys...>     API key(s) - separate multiple keys with spaces or commas
+  -o, --output <path>     Output directory or file (default: <input-dir>/output/)
+  -w, --overwrite         Overwrite original files
+  -r, --resize            Enable resize
+  -m, --method <method>   Resize method (scale, fit, cover, thumb)
+  --width <width>         Target width
+  --height <height>       Target height
 ```
+
+**📊 Progress Display:**
+
+- **Single file:** Spinner showing status
+- **Multiple files (2+):** Auto progress bar with real-time percentage and file count
 
 **Resize Methods:**
 
-| Method  | Description                                 | Required         |
-| ------- | ------------------------------------------- | ---------------- |
-| `scale` | Proportionally scales image                 | width OR height  |
-| `fit`   | Scales to fit within dimensions             | width AND height |
-| `cover` | Scales and crops to fill dimensions exactly | width AND height |
-| `thumb` | Intelligent cropping for thumbnails         | width AND height |
+| Method  | Description                       | Required         |
+| ------- | --------------------------------- | ---------------- |
+| `scale` | Scale image proportionally        | width OR height  |
+| `fit`   | Scale to fit within dimensions    | width AND height |
+| `cover` | Scale and crop to fill dimensions | width AND height |
+| `thumb` | Smart crop for thumbnails         | width AND height |
 
 **Examples:**
 
@@ -201,18 +217,18 @@ tinypng convert <files...> [options]
 Options:
   -k, --key <keys...>     API key(s)
   -f, --format <format>   Target format (webp, png, jpeg, avif) [REQUIRED]
-  -o, --output <path>     Output directory or file (default: <input-dir>/output/)
+  -o, --output <path>     Output directory or file (default: ./output/)
   -w, --overwrite         Overwrite original files
 ```
 
 **Supported Formats:**
 
-| Format | Extension | Transparency | Best For                          |
-| ------ | --------- | ------------ | --------------------------------- |
-| PNG    | `.png`    | ✅ Yes       | Screenshots, graphics             |
-| JPEG   | `.jpg`    | ❌ No        | Photos                            |
-| WebP   | `.webp`   | ✅ Yes       | Modern web, excellent compression |
-| AVIF   | `.avif`   | ✅ Yes       | Next-gen, smallest files          |
+| Format | Extension | Transparency | Best For                        |
+| ------ | --------- | ------------ | ------------------------------- |
+| PNG    | `.png`    | ✅ Yes       | Screenshots, graphics           |
+| JPEG   | `.jpg`    | ❌ No        | Photos                          |
+| WebP   | `.webp`   | ✅ Yes       | Modern web, great compression   |
+| AVIF   | `.avif`   | ✅ Yes       | Next-gen format, smallest files |
 
 **Examples:**
 
@@ -252,19 +268,19 @@ tinypng cfg -s
 tinypng cfg -r
 ```
 
-### Shortcut Flags
+### Command Shortcuts
 
-| Long Form     | Short | Description         |
-| ------------- | ----- | ------------------- |
-| `compress`    | `c`   | Compress images     |
-| `convert`     | `cv`  | Convert format      |
-| `config`      | `cfg` | Manage config       |
-| `--overwrite` | `-w`  | Overwrite originals |
-| `--resize`    | `-r`  | Enable resize       |
-| `--format`    | `-f`  | Target format       |
-| `--method`    | `-m`  | Resize method       |
-| `--output`    | `-o`  | Output path         |
-| `--key`       | `-k`  | API key(s)          |
+| Full          | Short | Description    |
+| ------------- | ----- | -------------- |
+| `compress`    | `c`   | Compress       |
+| `convert`     | `cv`  | Convert format |
+| `config`      | `cfg` | Config manager |
+| `--overwrite` | `-w`  | Overwrite      |
+| `--resize`    | `-r`  | Enable resize  |
+| `--format`    | `-f`  | Target format  |
+| `--method`    | `-m`  | Resize method  |
+| `--output`    | `-o`  | Output path    |
+| `--key`       | `-k`  | API key        |
 
 ### Multiple API Keys
 
