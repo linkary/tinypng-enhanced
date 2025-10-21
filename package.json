@@ -22,6 +22,7 @@
   "scripts": {
     "env": "export TINYPNG_API_KEY=$TINYPNG_API_KEY",
     "test": "vitest run",
+    "test:env": "npm run env && vitest run",
     "test:watch": "npm run env && vitest",
     "test:coverage": "npm run env && vitest run --coverage",
     "test:unit": "vitest run --exclude src/service.test.mjs --exclude src/tinypng.test.mjs",
