@@ -55,11 +55,17 @@ export async function compressCommand(files, options) {
   }
 
   // Process files with concurrency control and individual progress bars
-  const results = await processFilesWithConcurrency(filesToProcess, options, apiKeys, concurrent, baseDir)
+  const { results, compressor } = await processFilesWithConcurrency(
+    filesToProcess,
+    options,
+    apiKeys,
+    concurrent,
+    baseDir
+  )
 
   // Display summary
   displayCompressionSummary(results)
-  displayQuotaStatus(apiKeys)
+  displayQuotaStatus(compressor)
   displayOutputInfo(options)
 }
 
@@ -108,7 +114,7 @@ export async function convertCommand(files, options) {
   }
 
   // Process files with concurrency control and individual progress bars
-  const results = await processConvertFilesWithConcurrency(
+  const { results, compressor } = await processConvertFilesWithConcurrency(
     filesToProcess,
     options,
     apiKeys,
@@ -118,7 +124,7 @@ export async function convertCommand(files, options) {
 
   // Display summary
   displayConversionSummary(results)
-  displayQuotaStatus(apiKeys)
+  displayQuotaStatus(compressor)
   displayOutputInfo(options)
 }
 

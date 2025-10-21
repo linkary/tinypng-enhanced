@@ -3,7 +3,6 @@
  */
 
 import chalk from 'chalk'
-import TinyPNGCompressor from '../../src/tinypng.mjs'
 import { formatSize } from '../../src/utils/compression.mjs'
 
 /**
@@ -39,13 +38,12 @@ export function displayConversionSummary(results) {
 }
 
 /**
- * Display quota status
+ * Display quota status from a compressor instance
+ * @param {TinyPNGCompressor} compressor - The compressor instance that was used
  */
-export function displayQuotaStatus(apiKeys) {
-  // Create a temporary compressor instance to get stats
-  const tempCompressor = new TinyPNGCompressor({ apiKey: apiKeys })
-  const summary = tempCompressor.getSummary()
-  const stats = tempCompressor.getStats()
+export function displayQuotaStatus(compressor) {
+  const summary = compressor.getSummary()
+  const stats = compressor.getStats()
 
   console.log(chalk.cyan.bold('\n📊 Quota Status'))
 

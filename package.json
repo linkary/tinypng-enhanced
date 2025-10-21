@@ -11,8 +11,8 @@
     "./service": "./src/service.mjs"
   },
   "scripts": {
-    "env": "export TINYPNG_API_KEY=$TINYPNG_API_KEY && export TINYPNG_EXTRA_API_KEY=$TINYPNG_EXTRA_API_KEY",
-    "test": "vitest run",
+    "env": "export API_KEY=$(echo $TINYPNG_API_KEY | cut -d',' -f1)",
+    "test": "npm run env && vitest run",
     "test:watch": "npm run env && vitest",
     "test:coverage": "npm run env && vitest run --coverage",
     "test:ui": "npm run env && vitest --ui",

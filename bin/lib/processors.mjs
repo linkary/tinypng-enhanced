@@ -15,15 +15,25 @@ import { getDisplayName, getOutputPath, getConvertOutputPath } from './file-util
 /**
  * Process a single file or URL compression with individual progress bar
  */
-export async function processSingleFile(inputPath, outputPath, options, apiKeys, multiBar, results, baseDir) {
+export async function processSingleFile(
+  inputPath,
+  outputPath,
+  options,
+  apiKeys,
+  multiBar,
+  results,
+  baseDir,
+  sharedCompressor = null
+) {
   const displayName = getDisplayName(inputPath, baseDir)
   const isUrlInput = isUrl(inputPath)
   let fileBar = null
   let lastProgress = 0
 
   try {
-    // Create a dedicated compressor instance for this file to isolate progress events
-    const fileCompressor = new TinyPNGCompressor({ apiKey: apiKeys })
+    // Use shared compressor if provided, otherwise create dedicated one
+    // Shared compressor allows quota tracking across all files
+    const fileCompressor = sharedCompressor || new TinyPNGCompressor({ apiKey: apiKeys })
 
     // Create individual progress bar for this file
     if (multiBar) {
@@ -141,7 +151,8 @@ export async function processSingleConvert(
   apiKeys,
   multiBar,
   results,
-  baseDir
+  baseDir,
+  sharedCompressor = null
 ) {
   const displayName = getDisplayName(inputPath, baseDir)
   const isUrlInput = isUrl(inputPath)
@@ -149,8 +160,9 @@ export async function processSingleConvert(
   let lastProgress = 0
 
   try {
-    // Create a dedicated compressor instance for this file to isolate progress events
-    const fileCompressor = new TinyPNGCompressor({ apiKey: apiKeys })
+    // Use shared compressor if provided, otherwise create dedicated one
+    // Shared compressor allows quota tracking across all files
+    const fileCompressor = sharedCompressor || new TinyPNGCompressor({ apiKey: apiKeys })
 
     // Create individual progress bar for this file
     if (multiBar) {
@@ -280,6 +292,9 @@ export async function processFilesWithConcurrency(filesToProcess, options, apiKe
     errors: [],
   }
 
+  // Create a shared compressor instance to track quota across all files
+  const sharedCompressor = new TinyPNGCompressor({ apiKey: apiKeys })
+
   // Use multi-progress bar for multiple files
   const useMultiBar = filesToProcess.length > 1
   let multiBar = null
@@ -332,7 +347,8 @@ export async function processFilesWithConcurrency(filesToProcess, options, apiKe
         apiKeys,
         multiBar,
         results,
-        baseDir
+        baseDir,
+        sharedCompressor
       )
       const wrappedPromise = promise.then(value => ({ promise: wrappedPromise, value }))
       activePromises.push(wrappedPromise)
@@ -366,7 +382,8 @@ export async function processFilesWithConcurrency(filesToProcess, options, apiKe
     }
   }
 
-  return results
+  // Return results and the shared compressor for quota display
+  return { results, compressor: sharedCompressor }
 }
 
 /**
@@ -384,6 +401,9 @@ export async function processConvertFilesWithConcurrency(
     failed: 0,
     errors: [],
   }
+
+  // Create a shared compressor instance to track quota across all files
+  const sharedCompressor = new TinyPNGCompressor({ apiKey: apiKeys })
 
   const useMultiBar = filesToProcess.length > 1
   let multiBar = null
@@ -432,7 +452,8 @@ export async function processConvertFilesWithConcurrency(
         apiKeys,
         multiBar,
         results,
-        baseDir
+        baseDir,
+        sharedCompressor
       )
       const wrappedPromise = promise.then(value => ({ promise: wrappedPromise, value }))
       activePromises.push(wrappedPromise)
@@ -462,5 +483,6 @@ export async function processConvertFilesWithConcurrency(
     }
   }
 
-  return results
+  // Return results and the shared compressor for quota display
+  return { results, compressor: sharedCompressor }
 }

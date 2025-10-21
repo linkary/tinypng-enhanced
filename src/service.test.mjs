@@ -15,7 +15,11 @@ const __dirname = dirname(__filename)
 // Test configuration
 const OUTPUT_DIR = join(__dirname, '../test/output')
 const TEST_IMAGE = join(__dirname, '../test/coding.png')
-const API_KEY = process.env.TINYPNG_API_KEY
+const API_KEY = process.env.API_KEY
+
+if (!API_KEY) {
+  throw new Error('API_KEY is not set')
+}
 
 // Setup and cleanup
 beforeAll(() => {
