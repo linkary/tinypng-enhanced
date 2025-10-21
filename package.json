@@ -11,9 +11,10 @@
     "./service": "./src/service.mjs"
   },
   "files": [
-    "bin",
-    "src",
-    "package.json",
+    "bin/**/*.mjs",
+    "src/**/*.mjs",
+    "src/**/*.d.ts",
+    "!src/**/*.test.mjs",
     "README.md",
     "README.en.md",
     "LICENSE"
