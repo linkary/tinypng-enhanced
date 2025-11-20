@@ -220,9 +220,19 @@ export async function processSingleConvert(
 
     // Step 3: Convert with real-time progress
     const mimeType = `image/${options.format.replace('.', '')}`
+    const convertOptions = { type: mimeType }
+
+    // Prepare transform options for JPEG conversion (required when converting PNG with transparency)
+    let transformOptions = null
+    if (options.format === 'jpeg' || options.format === 'jpg') {
+      transformOptions = {
+        background: options.background || 'white',
+      }
+    }
+
     const convertResult = await TinyPNGService.convert(
       shrinkResult.outputUrl,
-      { type: mimeType },
+      convertOptions,
       keyStat.key,
       (bytesReceived, totalBytes) => {
         // Calculate convert/download progress (50% to 95%)
@@ -237,7 +247,8 @@ export async function processSingleConvert(
             status: `Converting... (${Math.round(downloadProgress * 100)}%)`,
           })
         }
-      }
+      },
+      transformOptions
     )
 
     const convertedBuffer = Buffer.from(await convertResult.response.arrayBuffer())

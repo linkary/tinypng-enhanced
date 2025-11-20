@@ -262,10 +262,18 @@ export async function resize(url, resizeOptions, apiKey, onProgress = null) {
  * @param {string|string[]} convertOptions.type - Target format(s) (e.g., 'image/webp', ['image/webp', 'image/png'])
  * @param {string} apiKey - TinyPNG API key
  * @param {Function} [onProgress] - Progress callback (bytesReceived, totalBytes)
+ * @param {Object} [transformOptions] - Optional transform options (e.g., {background: 'white'})
  * @returns {Promise<Object>} Convert result with response and compression count
  * @throws {Error} If conversion fails
  */
-export async function convert(url, convertOptions, apiKey, onProgress = null) {
+export async function convert(url, convertOptions, apiKey, onProgress = null, transformOptions = null) {
+  const requestBody = { convert: convertOptions }
+  
+  // Add transform options if provided (e.g., for JPEG background flattening)
+  if (transformOptions) {
+    requestBody.transform = transformOptions
+  }
+
   const { response, compressionCount } = await request(
     url,
     {
@@ -273,7 +281,7 @@ export async function convert(url, convertOptions, apiKey, onProgress = null) {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ convert: convertOptions }),
+      body: JSON.stringify(requestBody),
     },
     apiKey
   )
