@@ -18,29 +18,9 @@ program
   .description('TinyPNG CLI - Compress and convert images with TinyPNG API')
   .version('2.1.0')
 
-// Default action for compress (when no command specified)
+// Compress command (explicit and default)
 program
-  .argument('[files...]', 'Files or directories to compress (defaults to compress command)')
-  .option('-k, --key <keys...>', 'API key(s) - separate multiple keys with spaces or commas')
-  .option('-o, --output <path>', 'Output directory or file (default: <input-dir>/output/)')
-  .option('-w, --overwrite', 'Overwrite original files')
-  .option('-r, --resize', 'Enable resize')
-  .option('-m, --method <method>', 'Resize method (scale, fit, cover, thumb)')
-  .option('--width <width>', 'Target width', parseInt)
-  .option('--height <height>', 'Target height', parseInt)
-  .option('-n, --concurrent <number>', 'Number of concurrent operations (default: 3, max: 10)', parseInt)
-  .option('-d, --depth <number>', 'Directory scan depth for nested folders (default: 1, max: 10)', parseInt)
-  .action(async (files, options) => {
-    if (files && files.length > 0) {
-      await compressCommand(files, options)
-    } else {
-      program.outputHelp()
-    }
-  })
-
-// Compress command (explicit)
-program
-  .command('compress <files...>')
+  .command('compress <files...>', { isDefault: true })
   .alias('c')
   .description('Compress images')
   .option('-k, --key <keys...>', 'API key(s) - separate multiple keys with spaces or commas')
@@ -62,6 +42,7 @@ program
   .option('-k, --key <keys...>', 'API key(s) - separate multiple keys with spaces or commas')
   .option('-f, --format <format>', 'Target format (webp, png, jpeg, avif)')
   .option('-o, --output <path>', 'Output directory or file (default: same as input directory)')
+  .option('-b, --background <color>', 'Background color for JPEG conversion (default: white)')
   .option('-n, --concurrent <number>', 'Number of concurrent operations (default: 3, max: 10)', parseInt)
   .option('-d, --depth <number>', 'Directory scan depth for nested folders (default: 1, max: 10)', parseInt)
   .action(convertCommand)
