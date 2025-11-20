@@ -36,3 +36,7 @@ build/
 
 # Coverage
 coverage/
+
+/*.md
+!README.md
+!README.en.md

@@ -168,10 +168,6 @@ export function getConvertOutputPath(inputPath, options) {
   const isUrlInput = isUrl(inputPath)
   const ext = options.format.startsWith('.') ? options.format : `.${options.format}`
 
-  if (options.overwrite) {
-    return inputPath
-  }
-
   let base
   if (isUrlInput) {
     try {
@@ -194,15 +190,14 @@ export function getConvertOutputPath(inputPath, options) {
     return options.output
   }
 
-  // Default: output/ directory relative to input file's directory
+  // Default: same directory as input file
   if (!isUrlInput) {
     const dir = dirname(inputPath)
-    const outputDir = join(dir, 'output')
-    return join(outputDir, `${base}${ext}`)
+    return join(dir, `${base}${ext}`)
   }
 
   // For URLs, use current directory
-  return join(process.cwd(), 'output', `${base}${ext}`)
+  return join(process.cwd(), `${base}${ext}`)
 }
 
 /**
